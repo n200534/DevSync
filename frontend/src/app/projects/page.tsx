@@ -10,7 +10,8 @@ import {
   Calendar, 
   ExternalLink,
   Github,
-  Plus
+  Plus,
+  User
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,6 +59,7 @@ export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTech, setSelectedTech] = useState<string[]>([])
   const [availableTech, setAvailableTech] = useState<string[]>([])
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const initializeProjects = async () => {
@@ -67,7 +69,17 @@ export default function ProjectsPage() {
         
         // Check if user is authenticated
         const token = localStorage.getItem('devsync_token')
-        if (!token) {
+        const userData = localStorage.getItem('devsync_user')
+        if (!token || !userData) {
+          router.push('/auth/login')
+          return
+        }
+
+        try {
+          const currentUser = JSON.parse(userData)
+          setUser(currentUser)
+        } catch (error) {
+          console.error('Error parsing user data:', error)
           router.push('/auth/login')
           return
         }
@@ -167,7 +179,13 @@ export default function ProjectsPage() {
                 Dashboard
               </Link>
               <Link 
-                href="/projects/new"
+                href={`/profile/${user?.username || ''}`}
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                My Profile
+              </Link>
+              <Link 
+                href="/projects/create"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
               >
                 <Plus className="h-4 w-4 mr-1" />
@@ -239,7 +257,14 @@ export default function ProjectsPage() {
             <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{project.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    <Link 
+                      href={`/projects/${project.id}`}
+                      className="hover:text-blue-600 transition-colors"
+                    >
+                      {project.title}
+                    </Link>
+                  </h3>
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     project.isOpen 
                       ? 'bg-green-100 text-green-800' 

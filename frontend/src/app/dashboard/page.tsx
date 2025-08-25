@@ -12,7 +12,8 @@ import {
   Github,
   Edit3,
   Users,
-  Calendar
+  Calendar,
+  Eye
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -264,9 +265,9 @@ export default function DashboardPage() {
             {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Link
-                  href="/projects/new"
+                  href="/projects/create"
                   className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <Plus className="h-6 w-6 text-blue-600 mr-3" />
@@ -283,6 +284,16 @@ export default function DashboardPage() {
                   <div>
                     <h3 className="font-medium text-gray-900">Edit Profile</h3>
                     <p className="text-sm text-gray-500">Update your bio and skills</p>
+                  </div>
+                </Link>
+                <Link
+                  href={`/profile/${user.username}`}
+                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <Eye className="h-6 w-6 text-purple-600 mr-3" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">View Public Profile</h3>
+                    <p className="text-sm text-gray-500">See how others see you</p>
                   </div>
                 </Link>
               </div>
