@@ -139,16 +139,16 @@ export default function Navigation() {
             </div>
 
             {/* Notifications */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 relative">
+            <Link href="/notifications" className="p-2 text-gray-400 hover:text-gray-600 relative">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-            </button>
+            </Link>
 
             {/* Messages */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 relative">
+            <Link href="/messages" className="p-2 text-gray-400 hover:text-gray-600 relative">
               <MessageCircle className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-green-500 rounded-full"></span>
-            </button>
+            </Link>
 
             {/* User Menu */}
             <div className="relative">
