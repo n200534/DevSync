@@ -6,7 +6,7 @@ import Navigation from '@/components/Navigation'
 import ProjectCard from '@/components/ProjectCard'
 import { 
   TrendingUp, 
-  Fire, 
+  Flame as Fire, 
   Star, 
   Users, 
   Code, 
@@ -258,7 +258,7 @@ export default function TrendingPage() {
             <TrendingUp className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">Trending</h1>
           </div>
-          <p className="text-gray-600">Discover what's popular in the developer community</p>
+          <p className="text-gray-600">Discover what&apos;s popular in the developer community</p>
         </div>
 
         {/* Tabs */}

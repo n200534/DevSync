@@ -89,7 +89,7 @@ export default function LoginPage() {
       {/* Features preview */}
       <div className="mt-12 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-6 px-4 shadow sm:rounded-lg sm:px-10">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">What you'll get:</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">What you&apos;ll get:</h3>
           <ul className="space-y-3 text-sm text-gray-600">
             <li className="flex items-center">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>

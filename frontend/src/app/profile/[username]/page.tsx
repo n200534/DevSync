@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { User, Project, Endorsement } from '@/types'
 import { 
   User as UserIcon, 
@@ -82,12 +83,12 @@ export default function PublicProfilePage() {
           <UserIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h1>
           <p className="text-gray-600 mb-4">{error}</p>
-          <a 
+          <Link 
             href="/" 
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Go Home
-          </a>
+          </Link>
         </div>
       </div>
     )

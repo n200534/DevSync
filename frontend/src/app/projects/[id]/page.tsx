@@ -13,7 +13,7 @@ import {
   Plus,
   Send,
   ExternalLink,
-  GitHub,
+  Github as GitHub,
   Eye,
   CheckCircle,
   XCircle,
