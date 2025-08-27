@@ -14,6 +14,8 @@ import {
   User
 } from 'lucide-react'
 import Link from 'next/link'
+import Navigation from '@/components/Navigation'
+import ProjectCard from '@/components/ProjectCard'
 
 interface Project {
   id: string
@@ -161,40 +163,8 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Code className="h-8 w-8 text-blue-600" />
-              <Link href="/" className="ml-2 text-xl font-bold text-gray-900">
-                DevSync
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link 
-                href="/dashboard"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href={`/profile/${user?.username || ''}`}
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                My Profile
-              </Link>
-              <Link 
-                href="/projects/create"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Create Project
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Professional Navigation */}
+      <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
