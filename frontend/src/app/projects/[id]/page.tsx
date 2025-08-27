@@ -36,7 +36,7 @@ export default function ProjectDetailPage() {
   const [projectData, setProjectData] = useState<ProjectDetailData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [showApplyForm, setShowApplyForm] = useState(false)
   const [applicationMessage, setApplicationMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)

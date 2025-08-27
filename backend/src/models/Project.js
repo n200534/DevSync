@@ -15,7 +15,7 @@ const projectSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
-  repoUrl: {
+  githubUrl: {
     type: String,
     default: ''
   },
@@ -23,12 +23,17 @@ const projectSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  screenshots: [{
-    type: String
-  }],
-  isOpen: {
+  isOpenForCollaboration: {
     type: Boolean,
     default: true
+  },
+  maxCollaborators: {
+    type: Number,
+    default: 5
+  },
+  requirements: {
+    type: String,
+    default: ''
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -51,7 +56,7 @@ const projectSchema = new mongoose.Schema({
 projectSchema.index({ title: 'text', description: 'text' });
 projectSchema.index({ techStack: 1 });
 projectSchema.index({ owner: 1 });
-projectSchema.index({ isOpen: 1 });
+projectSchema.index({ isOpenForCollaboration: 1 });
 projectSchema.index({ createdAt: -1 });
 
 // Virtual for project summary
@@ -61,7 +66,7 @@ projectSchema.virtual('summary').get(function() {
     title: this.title,
     description: this.description,
     techStack: this.techStack,
-    isOpen: this.isOpen,
+    isOpenForCollaboration: this.isOpenForCollaboration,
     createdAt: this.createdAt
   };
 });

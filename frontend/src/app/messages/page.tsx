@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { User, Message as MessageType } from '@/types'
 import { 
   MessageCircle, 
   Search, 
@@ -47,11 +48,11 @@ export default function MessagesPage() {
   const router = useRouter()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<MessageType[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeMessages = async () => {
@@ -70,80 +71,20 @@ export default function MessagesPage() {
         const currentUser = JSON.parse(userData)
         setUser(currentUser)
 
-        // Mock conversations data - replace with actual API calls
-        const mockConversations: Conversation[] = [
-          {
-            id: '1',
-            participant: {
-              id: '2',
-              username: 'sarah_dev',
-              name: 'Sarah Johnson',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-              title: 'Senior Full Stack Developer',
-              company: 'TechCorp',
-              isOnline: true
-            },
-            lastMessage: {
-              id: '1',
-              content: 'Hey! I saw your project on AI code review. Would love to collaborate!',
-              senderId: '2',
-              receiverId: currentUser.id,
-              timestamp: '2024-01-20T10:30:00Z',
-              isRead: false,
-              type: 'text'
-            },
-            unreadCount: 2,
-            updatedAt: '2024-01-20T10:30:00Z'
-          },
-          {
-            id: '2',
-            participant: {
-              id: '3',
-              username: 'alex_coder',
-              name: 'Alex Chen',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-              title: 'DevOps Engineer',
-              company: 'CloudTech',
-              isOnline: false
-            },
-            lastMessage: {
-              id: '2',
-              content: 'Thanks for the connection request! Let\'s discuss potential collaboration opportunities.',
-              senderId: '3',
-              receiverId: currentUser.id,
-              timestamp: '2024-01-19T15:45:00Z',
-              isRead: true,
-              type: 'text'
-            },
-            unreadCount: 0,
-            updatedAt: '2024-01-19T15:45:00Z'
-          },
-          {
-            id: '3',
-            participant: {
-              id: '4',
-              username: 'maya_ui',
-              name: 'Maya Rodriguez',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              title: 'UI/UX Designer',
-              company: 'DesignStudio',
-              isOnline: true
-            },
-            lastMessage: {
-              id: '3',
-              content: 'The design system you shared looks amazing! Can we schedule a call to discuss?',
-              senderId: currentUser.id,
-              receiverId: '4',
-              timestamp: '2024-01-18T09:20:00Z',
-              isRead: true,
-              type: 'text'
-            },
-            unreadCount: 0,
-            updatedAt: '2024-01-18T09:20:00Z'
+        // Fetch conversations from API
+        const conversationsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/conversations`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        ]
+        })
 
-        setConversations(mockConversations)
+        if (conversationsResponse.ok) {
+          const conversationsData = await conversationsResponse.json()
+          setConversations(conversationsData)
+        } else {
+          console.error('Failed to fetch conversations:', conversationsResponse.status)
+          setConversations([])
+        }
         
       } catch (error) {
         console.error('Error initializing messages:', error)
@@ -160,21 +101,59 @@ export default function MessagesPage() {
     conv.participant.username.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return
+  const loadMessages = async (conversationId: string) => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
 
-    const message: Message = {
-      id: Date.now().toString(),
-      content: newMessage.trim(),
-      senderId: user.id,
-      receiverId: selectedConversation.participant.id,
-      timestamp: new Date().toISOString(),
-      isRead: false,
-      type: 'text'
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/conversations/${conversationId}/messages`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const messagesData = await response.json()
+        setMessages(messagesData)
+      } else {
+        console.error('Failed to fetch messages:', response.status)
+        setMessages([])
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error)
+      setMessages([])
     }
+  }
 
-    setMessages(prev => [...prev, message])
-    setNewMessage('')
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !user) return
+
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/messages/conversations/${selectedConversation.id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: newMessage.trim(),
+          type: 'text'
+        })
+      })
+
+      if (response.ok) {
+        const newMessageData = await response.json()
+        setMessages(prev => [...prev, newMessageData])
+        setNewMessage('')
+      } else {
+        console.error('Failed to send message:', response.status)
+      }
+    } catch (error) {
+      console.error('Error sending message:', error)
+    }
   }
 
   const formatTime = (timestamp: string) => {
@@ -227,7 +206,10 @@ export default function MessagesPage() {
               {filteredConversations.map(conversation => (
                 <div
                   key={conversation.id}
-                  onClick={() => setSelectedConversation(conversation)}
+                  onClick={() => {
+                    setSelectedConversation(conversation)
+                    loadMessages(conversation.id)
+                  }}
                   className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
                     selectedConversation?.id === conversation.id ? 'bg-blue-50 border-blue-200' : ''
                   }`}
@@ -321,26 +303,26 @@ export default function MessagesPage() {
                     {messages.map(message => (
                       <div
                         key={message.id}
-                        className={`flex ${message.senderId === user.id ? 'justify-end' : 'justify-start'}`}
+                        className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
                           className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.senderId === user.id
+                            message.senderId === user?.id
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-200 text-gray-900'
                           }`}
                         >
                           <p className="text-sm">{message.content}</p>
                           <div className={`flex items-center justify-end mt-1 space-x-1 ${
-                            message.senderId === user.id ? 'text-blue-100' : 'text-gray-500'
+                            message.senderId === user?.id ? 'text-blue-100' : 'text-gray-500'
                           }`}>
                             <span className="text-xs">
-                              {new Date(message.timestamp).toLocaleTimeString([], { 
+                              {new Date(message.createdAt).toLocaleTimeString([], { 
                                 hour: '2-digit', 
                                 minute: '2-digit' 
                               })}
                             </span>
-                            {message.senderId === user.id && (
+                            {message.senderId === user?.id && (
                               <span>
                                 {message.isRead ? (
                                   <CheckCheck className="h-3 w-3" />

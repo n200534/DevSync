@@ -11,19 +11,30 @@ const router = express.Router();
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { id } = req.user; // Use the user object from middleware
-    const { title, description, techStack, repoUrl, liveUrl, screenshots } = req.body;
+    const { 
+      title, 
+      description, 
+      techStack, 
+      githubUrl, 
+      liveUrl, 
+      isOpenForCollaboration,
+      maxCollaborators,
+      requirements
+    } = req.body;
 
-    if (!title || !description || !techStack) {
-      return res.status(400).json({ error: 'Title, description, and tech stack are required' });
+    if (!title || !description) {
+      return res.status(400).json({ error: 'Title and description are required' });
     }
 
     const project = await Project.create({
       title,
       description,
-      techStack,
-      repoUrl,
-      liveUrl,
-      screenshots: screenshots || [],
+      techStack: techStack || [],
+      githubUrl: githubUrl || undefined,
+      liveUrl: liveUrl || undefined,
+      isOpenForCollaboration: isOpenForCollaboration !== undefined ? isOpenForCollaboration : true,
+      maxCollaborators: maxCollaborators || 5,
+      requirements: requirements || undefined,
       owner: id
     });
 
@@ -278,6 +289,49 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
   }
 });
 
+// Get project applications (project owner only)
+router.get('/:id/applications', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { id: userId } = req.user;
+
+    const project = await Project.findById(id);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.owner.toString() !== userId) {
+      return res.status(403).json({ error: 'Only project owner can view applications' });
+    }
+
+    const applications = await Application.find({ project: id })
+      .populate('user', '_id username name avatar')
+      .populate('project', '_id title')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Convert MongoDB _id to id for consistency
+    const applicationsData = applications.map(app => ({
+      ...app,
+      id: app._id,
+      user: {
+        ...app.user,
+        id: app.user._id
+      },
+      project: {
+        ...app.project,
+        id: app.project._id
+      }
+    }));
+
+    res.json(applicationsData);
+  } catch (error) {
+    console.error('Get applications error:', error);
+    res.status(500).json({ error: 'Failed to get applications' });
+  }
+});
+
 // Accept/reject application (project owner only)
 router.put('/:id/applications/:applicationId', authenticateToken, async (req, res) => {
   try {
@@ -285,8 +339,8 @@ router.put('/:id/applications/:applicationId', authenticateToken, async (req, re
     const { id: userId } = req.user; // Use the user object from middleware
     const { status } = req.body;
 
-    if (!['accepted', 'rejected'].includes(status)) {
-      return res.status(400).json({ error: 'Status must be accepted or rejected' });
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be approved or rejected' });
     }
 
     const project = await Project.findById(id);
@@ -312,8 +366,8 @@ router.put('/:id/applications/:applicationId', authenticateToken, async (req, re
     // Update application status
     await Application.findByIdAndUpdate(applicationId, { status });
 
-    // If accepted, add user as collaborator
-    if (status === 'accepted') {
+    // If approved, add user as collaborator
+    if (status === 'approved') {
       await Collaboration.create({
         user: application.user,
         project: id,

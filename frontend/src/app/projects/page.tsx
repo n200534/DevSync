@@ -11,11 +11,12 @@ import {
   ExternalLink,
   Github,
   Plus,
-  User
+  User as UserIcon
 } from 'lucide-react'
 import Link from 'next/link'
 import Navigation from '@/components/Navigation'
 import ProjectCard from '@/components/ProjectCard'
+import { User } from '@/types'
 
 interface Project {
   id: string
@@ -61,7 +62,7 @@ export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTech, setSelectedTech] = useState<string[]>([])
   const [availableTech, setAvailableTech] = useState<string[]>([])
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeProjects = async () => {

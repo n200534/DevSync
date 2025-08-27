@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Project } from '@/types'
+import { Project, User } from '@/types'
 import { 
   Plus, 
   X, 
@@ -43,7 +43,7 @@ export default function CreateProjectPage() {
     requirements: ''
   })
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     // Check if user is authenticated
@@ -63,7 +63,7 @@ export default function CreateProjectPage() {
     }
   }, [router])
 
-  const handleInputChange = (field: keyof CreateProjectForm, value: any) => {
+  const handleInputChange = (field: keyof CreateProjectForm, value: string | boolean | number | string[]) => {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { User } from '@/types'
 import ProjectCard from '@/components/ProjectCard'
 import { 
   TrendingUp, 
@@ -67,8 +68,9 @@ export default function TrendingPage() {
   const [activeTab, setActiveTab] = useState<'projects' | 'developers' | 'skills'>('projects')
   const [trendingProjects, setTrendingProjects] = useState<TrendingProject[]>([])
   const [trendingDevelopers, setTrendingDevelopers] = useState<TrendingDeveloper[]>([])
+  const [trendingSkills, setTrendingSkills] = useState<Array<{name: string, growth: string, color: string}>>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeTrending = async () => {
@@ -87,124 +89,33 @@ export default function TrendingPage() {
         const currentUser = JSON.parse(userData)
         setUser(currentUser)
 
-        // Mock trending data - replace with actual API calls
-        const mockTrendingProjects: TrendingProject[] = [
-          {
-            id: '1',
-            title: 'AI-Powered Code Review Assistant',
-            description: 'An intelligent tool that automatically reviews code, suggests improvements, and identifies potential bugs using machine learning.',
-            techStack: ['Python', 'TensorFlow', 'React', 'Node.js', 'Docker'],
-            githubUrl: 'https://github.com/example/ai-code-review',
-            liveUrl: 'https://ai-code-review.demo.com',
-            isOpenForCollaboration: true,
-            maxCollaborators: 8,
-            createdAt: '2024-01-15T10:00:00Z',
-            owner: {
-              id: '1',
-              username: 'ai_dev',
-              name: 'Sarah Chen',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-              title: 'AI Research Engineer',
-              company: 'TechCorp'
-            },
-            stats: {
-              views: 12500,
-              likes: 890,
-              applications: 45,
-              trendingScore: 95
-            },
-            trendingReason: 'hot'
-          },
-          {
-            id: '2',
-            title: 'Real-time Collaboration Platform',
-            description: 'A modern platform for real-time code collaboration with video calls, screen sharing, and integrated development environment.',
-            techStack: ['TypeScript', 'WebRTC', 'Socket.io', 'React', 'Express'],
-            githubUrl: 'https://github.com/example/collab-platform',
-            isOpenForCollaboration: true,
-            maxCollaborators: 12,
-            createdAt: '2024-01-10T14:30:00Z',
-            owner: {
-              id: '2',
-              username: 'collab_master',
-              name: 'Alex Rodriguez',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-              title: 'Full Stack Developer',
-              company: 'StartupXYZ'
-            },
-            stats: {
-              views: 8900,
-              likes: 567,
-              applications: 32,
-              trendingScore: 88
-            },
-            trendingReason: 'popular'
-          },
-          {
-            id: '3',
-            title: 'Blockchain Voting System',
-            description: 'A secure, transparent voting system built on blockchain technology with smart contracts and cryptographic verification.',
-            techStack: ['Solidity', 'Web3.js', 'React', 'Node.js', 'Ethereum'],
-            githubUrl: 'https://github.com/example/blockchain-voting',
-            isOpenForCollaboration: true,
-            maxCollaborators: 6,
-            createdAt: '2024-01-20T09:15:00Z',
-            owner: {
-              id: '3',
-              username: 'blockchain_dev',
-              name: 'Maya Patel',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              title: 'Blockchain Developer',
-              company: 'CryptoCorp'
-            },
-            stats: {
-              views: 15600,
-              likes: 1200,
-              applications: 78,
-              trendingScore: 92
-            },
-            trendingReason: 'featured'
-          }
-        ]
+        // Fetch trending data from API
+        const [projectsResponse, developersResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/trending/projects`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/trending/developers`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        ])
 
-        const mockTrendingDevelopers: TrendingDeveloper[] = [
-          {
-            id: '1',
-            username: 'ai_researcher',
-            name: 'Dr. Emily Watson',
-            title: 'Senior AI Research Scientist',
-            company: 'DeepMind',
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-            skills: ['Machine Learning', 'Python', 'TensorFlow', 'Research'],
-            trendingScore: 98,
-            recentActivity: 'Published groundbreaking research on transformer architectures'
-          },
-          {
-            id: '2',
-            username: 'web3_builder',
-            name: 'James Kim',
-            title: 'Blockchain Architect',
-            company: 'Ethereum Foundation',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-            skills: ['Solidity', 'Web3', 'DeFi', 'Smart Contracts'],
-            trendingScore: 95,
-            recentActivity: 'Launched innovative DeFi protocol with $10M TVL'
-          },
-          {
-            id: '3',
-            username: 'devops_guru',
-            name: 'Lisa Zhang',
-            title: 'Principal DevOps Engineer',
-            company: 'Google Cloud',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-            skills: ['Kubernetes', 'Docker', 'AWS', 'CI/CD'],
-            trendingScore: 92,
-            recentActivity: 'Open-sourced scalable infrastructure toolkit'
-          }
-        ]
+        if (projectsResponse.ok) {
+          const projectsData = await projectsResponse.json()
+          setTrendingProjects(projectsData)
+        } else {
+          console.error('Failed to fetch trending projects:', projectsResponse.status)
+        }
 
-        setTrendingProjects(mockTrendingProjects)
-        setTrendingDevelopers(mockTrendingDevelopers)
+        if (developersResponse.ok) {
+          const developersData = await developersResponse.json()
+          setTrendingDevelopers(developersData)
+        } else {
+          console.error('Failed to fetch trending developers:', developersResponse.status)
+        }
         
       } catch (error) {
         console.error('Error initializing trending:', error)
@@ -215,6 +126,28 @@ export default function TrendingPage() {
 
     initializeTrending()
   }, [router])
+
+  const loadTrendingSkills = async () => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/trending/skills`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const skillsData = await response.json()
+        setTrendingSkills(skillsData)
+      } else {
+        console.error('Failed to fetch trending skills:', response.status)
+      }
+    } catch (error) {
+      console.error('Error loading trending skills:', error)
+    }
+  }
 
   const getTrendingIcon = (reason: string) => {
     switch (reason) {
@@ -271,7 +204,12 @@ export default function TrendingPage() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => {
+                  setActiveTab(tab.id as 'projects' | 'developers' | 'skills')
+                  if (tab.id === 'skills' && trendingSkills.length === 0) {
+                    loadTrendingSkills()
+                  }
+                }}
                 className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -363,20 +301,7 @@ export default function TrendingPage() {
 
         {activeTab === 'skills' && (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { name: 'React', growth: '+25%', color: 'bg-blue-100 text-blue-800' },
-              { name: 'TypeScript', growth: '+18%', color: 'bg-blue-100 text-blue-800' },
-              { name: 'Python', growth: '+15%', color: 'bg-green-100 text-green-800' },
-              { name: 'Docker', growth: '+12%', color: 'bg-blue-100 text-blue-800' },
-              { name: 'Kubernetes', growth: '+20%', color: 'bg-purple-100 text-purple-800' },
-              { name: 'AWS', growth: '+8%', color: 'bg-orange-100 text-orange-800' },
-              { name: 'Machine Learning', growth: '+30%', color: 'bg-pink-100 text-pink-800' },
-              { name: 'Blockchain', growth: '+22%', color: 'bg-yellow-100 text-yellow-800' },
-              { name: 'GraphQL', growth: '+14%', color: 'bg-purple-100 text-purple-800' },
-              { name: 'Rust', growth: '+16%', color: 'bg-red-100 text-red-800' },
-              { name: 'Go', growth: '+10%', color: 'bg-cyan-100 text-cyan-800' },
-              { name: 'Vue.js', growth: '+7%', color: 'bg-green-100 text-green-800' }
-            ].map(skill => (
+            {trendingSkills.map(skill => (
               <div key={skill.name} className="bg-white rounded-lg shadow-sm border p-4 text-center hover:shadow-md transition-shadow">
                 <h3 className="font-medium text-gray-900 mb-2">{skill.name}</h3>
                 <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${skill.color}`}>

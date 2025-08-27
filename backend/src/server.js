@@ -13,6 +13,11 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const projectRoutes = require('./routes/projects');
 const endorsementRoutes = require('./routes/endorsements');
+const postRoutes = require('./routes/posts');
+const notificationRoutes = require('./routes/notifications');
+const messageRoutes = require('./routes/messages');
+const searchRoutes = require('./routes/search');
+const trendingRoutes = require('./routes/trending');
 
 const app = express();
 const server = createServer(app);
@@ -54,6 +59,11 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/endorsements', endorsementRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/trending', trendingRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

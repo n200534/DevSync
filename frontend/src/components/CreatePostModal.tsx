@@ -17,7 +17,24 @@ import {
 interface CreatePostModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (post: any) => void
+  onSubmit: (post: {
+    type: 'achievement' | 'project' | 'milestone' | 'learning' | 'collaboration';
+    content: string;
+    tags: string[];
+    project?: {
+      title: string;
+      description: string;
+      techStack: string[];
+      githubUrl?: string;
+      liveUrl?: string;
+    };
+    achievement?: {
+      title: string;
+      description: string;
+      icon: string;
+      badge?: string;
+    };
+  }) => void
 }
 
 export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalProps) {
@@ -35,6 +52,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePos
   const [achievementData, setAchievementData] = useState({
     title: '',
     description: '',
+    icon: 'trophy',
     badge: ''
   })
 
@@ -89,7 +107,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePos
     setContent('')
     setTags([])
     setProjectData({ title: '', description: '', techStack: [], githubUrl: '', liveUrl: '' })
-    setAchievementData({ title: '', description: '', badge: '' })
+    setAchievementData({ title: '', description: '', icon: 'trophy', badge: '' })
   }
 
   if (!isOpen) return null
@@ -117,7 +135,7 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePos
               {postTypes.map(type => (
                 <button
                   key={type.id}
-                  onClick={() => setPostType(type.id as any)}
+                  onClick={() => setPostType(type.id as 'achievement' | 'project' | 'learning' | 'milestone' | 'collaboration')}
                   className={`flex flex-col items-center p-3 rounded-lg border transition-colors ${
                     postType === type.id
                       ? 'border-blue-500 bg-blue-50'
@@ -271,6 +289,19 @@ export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePos
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Icon</label>
+                <select
+                  value={achievementData.icon}
+                  onChange={(e) => setAchievementData({ ...achievementData, icon: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="trophy">Trophy</option>
+                  <option value="star">Star</option>
+                  <option value="award">Award</option>
+                  <option value="medal">Medal</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Badge Level (Optional)</label>
                 <select

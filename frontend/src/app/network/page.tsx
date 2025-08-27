@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { User } from '@/types'
 import { 
   Users, 
   UserPlus, 
@@ -44,7 +45,7 @@ export default function NetworkPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [availableSkills, setAvailableSkills] = useState<string[]>([])
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeNetwork = async () => {
@@ -63,75 +64,46 @@ export default function NetworkPage() {
         const currentUser = JSON.parse(userData)
         setUser(currentUser)
 
-        // Mock data for now - replace with actual API call
-        const mockDevelopers: Developer[] = [
-          {
-            id: '1',
-            username: 'sarah_dev',
-            name: 'Sarah Johnson',
-            title: 'Senior Full Stack Developer',
-            company: 'TechCorp',
-            location: 'San Francisco, CA',
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-            skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
-            bio: 'Passionate about building scalable web applications and mentoring junior developers.',
-            githubUrl: 'https://github.com/sarah_dev',
-            linkedinUrl: 'https://linkedin.com/in/sarahjohnson',
-            followers: 1250,
-            following: 890,
-            projects: 45,
-            endorsements: 89,
-            isConnected: false,
-            mutualConnections: 12
-          },
-          {
-            id: '2',
-            username: 'alex_coder',
-            name: 'Alex Chen',
-            title: 'DevOps Engineer',
-            company: 'CloudTech',
-            location: 'Seattle, WA',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-            skills: ['Docker', 'Kubernetes', 'Python', 'Terraform'],
-            bio: 'DevOps enthusiast with 5+ years of experience in cloud infrastructure and automation.',
-            githubUrl: 'https://github.com/alex_coder',
-            linkedinUrl: 'https://linkedin.com/in/alexchen',
-            followers: 890,
-            following: 650,
-            projects: 32,
-            endorsements: 67,
-            isConnected: true,
-            mutualConnections: 8
-          },
-          {
-            id: '3',
-            username: 'maya_ui',
-            name: 'Maya Rodriguez',
-            title: 'UI/UX Designer & Frontend Developer',
-            company: 'DesignStudio',
-            location: 'New York, NY',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-            skills: ['Figma', 'React', 'CSS', 'Design Systems'],
-            bio: 'Creating beautiful and functional user experiences that make a difference.',
-            githubUrl: 'https://github.com/maya_ui',
-            linkedinUrl: 'https://linkedin.com/in/mayarodriguez',
-            followers: 2100,
-            following: 1200,
-            projects: 67,
-            endorsements: 156,
-            isConnected: false,
-            mutualConnections: 15
+        // Fetch all users from API
+        const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        ]
-
-        setDevelopers(mockDevelopers)
-        
-        // Extract unique skills for filter
-        const skillSet = new Set<string>()
-        mockDevelopers.forEach(dev => {
-          dev.skills.forEach(skill => skillSet.add(skill))
         })
-        setAvailableSkills(Array.from(skillSet).sort())
+
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json()
+          // Transform API data to match our Developer interface
+          const transformedDevelopers: Developer[] = usersData.map((user: any) => ({
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            title: user.title || 'Developer',
+            company: user.company || '',
+            location: user.location || 'Not specified',
+            avatar: user.avatar || '',
+            skills: user.skills || [],
+            bio: user.bio || '',
+            githubUrl: user.githubUrl || '',
+            linkedinUrl: user.linkedinUrl || '',
+            followers: 0, // Not implemented yet
+            following: 0, // Not implemented yet
+            projects: 0, // Will be calculated from user's projects
+            endorsements: 0, // Will be calculated from endorsements
+            isConnected: false, // Not implemented yet
+            mutualConnections: 0 // Not implemented yet
+          }))
+          setDevelopers(transformedDevelopers)
+          
+          // Extract unique skills for filter
+          const skillSet = new Set<string>()
+          transformedDevelopers.forEach(dev => {
+            dev.skills.forEach(skill => skillSet.add(skill))
+          })
+          setAvailableSkills(Array.from(skillSet).sort())
+        } else {
+          console.error('Failed to fetch users:', usersResponse.status)
+        }
         
       } catch (error) {
         console.error('Error initializing network:', error)

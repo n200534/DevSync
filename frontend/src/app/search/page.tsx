@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { User } from '@/types'
 import ProjectCard from '@/components/ProjectCard'
 import { 
   Search, 
@@ -46,7 +47,7 @@ interface SearchResult {
   }
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
@@ -55,7 +56,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'developers' | 'projects' | 'skills'>('all')
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeSearch = async () => {
@@ -88,97 +89,23 @@ export default function SearchPage() {
 
     setLoading(true)
     try {
-      // Mock search results - replace with actual API call
-      const mockResults: SearchResult[] = [
-        {
-          type: 'developer',
-          id: '1',
-          title: 'Sarah Johnson',
-          description: 'Senior Full Stack Developer with 5+ years of experience in React, Node.js, and cloud technologies.',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-          username: 'sarah_dev',
-          location: 'San Francisco, CA',
-          company: 'TechCorp',
-          skills: ['React', 'Node.js', 'TypeScript', 'AWS', 'Docker'],
-          followers: 1250,
-          projects: 45,
-          endorsements: 89
-        },
-        {
-          type: 'project',
-          id: '2',
-          title: 'AI-Powered Code Review Assistant',
-          description: 'An intelligent tool that automatically reviews code, suggests improvements, and identifies potential bugs using machine learning.',
-          techStack: ['Python', 'TensorFlow', 'React', 'Node.js', 'Docker'],
-          isOpenForCollaboration: true,
-          createdAt: '2024-01-15T10:00:00Z',
-          owner: {
-            id: '1',
-            username: 'ai_dev',
-            name: 'Sarah Chen',
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-          },
-          stats: {
-            views: 12500,
-            likes: 890,
-            applications: 45
-          }
-        },
-        {
-          type: 'developer',
-          id: '3',
-          title: 'Alex Chen',
-          description: 'DevOps Engineer specializing in cloud infrastructure, automation, and scalable systems.',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-          username: 'alex_coder',
-          location: 'Seattle, WA',
-          company: 'CloudTech',
-          skills: ['Docker', 'Kubernetes', 'Python', 'Terraform', 'AWS'],
-          followers: 890,
-          projects: 32,
-          endorsements: 67
-        },
-        {
-          type: 'project',
-          id: '4',
-          title: 'Real-time Collaboration Platform',
-          description: 'A modern platform for real-time code collaboration with video calls, screen sharing, and integrated development environment.',
-          techStack: ['TypeScript', 'WebRTC', 'Socket.io', 'React', 'Express'],
-          isOpenForCollaboration: true,
-          createdAt: '2024-01-10T14:30:00Z',
-          owner: {
-            id: '2',
-            username: 'collab_master',
-            name: 'Alex Rodriguez',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-          },
-          stats: {
-            views: 8900,
-            likes: 567,
-            applications: 32
-          }
-        },
-        {
-          type: 'skill',
-          id: '5',
-          title: 'React',
-          description: 'A JavaScript library for building user interfaces, particularly web applications.',
-          followers: 15420,
-          projects: 2840
+      const token = localStorage.getItem('devsync_token')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/search?q=${encodeURIComponent(term)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
         }
-      ]
+      })
 
-      // Filter results based on search term
-      const filteredResults = mockResults.filter(result =>
-        result.title.toLowerCase().includes(term.toLowerCase()) ||
-        result.description.toLowerCase().includes(term.toLowerCase()) ||
-        result.skills?.some(skill => skill.toLowerCase().includes(term.toLowerCase())) ||
-        result.techStack?.some(tech => tech.toLowerCase().includes(term.toLowerCase()))
-      )
-
-      setResults(filteredResults)
+      if (response.ok) {
+        const searchResults = await response.json()
+        setResults(searchResults)
+      } else {
+        console.error('Failed to perform search:', response.status)
+        setResults([])
+      }
     } catch (error) {
       console.error('Error performing search:', error)
+      setResults([])
     } finally {
       setLoading(false)
     }
@@ -245,7 +172,7 @@ export default function SearchPage() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'all' | 'developers' | 'projects' | 'skills')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
@@ -408,5 +335,20 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Search className="h-8 w-8 text-blue-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   )
 }

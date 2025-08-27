@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
+import { User } from '@/types'
 import { 
   Bell, 
   Check, 
@@ -43,7 +44,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [filter, setFilter] = useState<'all' | 'unread' | 'connections' | 'projects'>('all')
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const initializeNotifications = async () => {
@@ -62,95 +63,21 @@ export default function NotificationsPage() {
         const currentUser = JSON.parse(userData)
         setUser(currentUser)
 
-        // Mock notifications data - replace with actual API calls
-        const mockNotifications: Notification[] = [
-          {
-            id: '1',
-            type: 'connection',
-            title: 'New Connection Request',
-            message: 'Sarah Johnson wants to connect with you',
-            timestamp: '2024-01-20T10:30:00Z',
-            isRead: false,
-            actionUrl: '/network',
-            actor: {
-              id: '2',
-              name: 'Sarah Johnson',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-              username: 'sarah_dev'
-            }
-          },
-          {
-            id: '2',
-            type: 'project',
-            title: 'Project Application',
-            message: 'Alex Chen applied to join your "AI Code Review" project',
-            timestamp: '2024-01-20T09:15:00Z',
-            isRead: false,
-            actionUrl: '/projects/1',
-            actor: {
-              id: '3',
-              name: 'Alex Chen',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-              username: 'alex_coder'
-            },
-            metadata: {
-              projectTitle: 'AI Code Review'
-            }
-          },
-          {
-            id: '3',
-            type: 'endorsement',
-            title: 'Skill Endorsement',
-            message: 'Maya Rodriguez endorsed your React skills',
-            timestamp: '2024-01-19T16:45:00Z',
-            isRead: true,
-            actionUrl: '/profile/me',
-            actor: {
-              id: '4',
-              name: 'Maya Rodriguez',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              username: 'maya_ui'
-            },
-            metadata: {
-              skillName: 'React'
-            }
-          },
-          {
-            id: '4',
-            type: 'message',
-            title: 'New Message',
-            message: 'You have 3 unread messages from your network',
-            timestamp: '2024-01-19T14:20:00Z',
-            isRead: true,
-            actionUrl: '/messages',
-            metadata: {
-              connectionCount: 3
-            }
-          },
-          {
-            id: '5',
-            type: 'trending',
-            title: 'Your Project is Trending',
-            message: 'Your "Real-time Collaboration Platform" project is now trending!',
-            timestamp: '2024-01-18T11:30:00Z',
-            isRead: true,
-            actionUrl: '/projects/2',
-            metadata: {
-              projectTitle: 'Real-time Collaboration Platform'
-            }
-          },
-          {
-            id: '6',
-            type: 'system',
-            title: 'Welcome to DevSync!',
-            message: 'Complete your profile to get the most out of DevSync',
-            timestamp: '2024-01-15T08:00:00Z',
-            isRead: true,
-            actionUrl: '/profile/edit'
+        // Fetch notifications from API
+        const notificationsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        ]
+        })
 
-        setNotifications(mockNotifications)
+        if (notificationsResponse.ok) {
+          const notificationsData = await notificationsResponse.json()
+          setNotifications(notificationsData)
+        } else {
+          console.error('Failed to fetch notifications:', notificationsResponse.status)
+          // For now, show empty state if API fails
+          setNotifications([])
+        }
         
       } catch (error) {
         console.error('Error initializing notifications:', error)
@@ -213,26 +140,74 @@ export default function NotificationsPage() {
     }
   }
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, isRead: true }
-          : notification
-      )
-    )
+  const markAsRead = async (notificationId: string) => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(notification => 
+            notification.id === notificationId 
+              ? { ...notification, isRead: true }
+              : notification
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+    }
   }
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, isRead: true }))
-    )
+  const markAllAsRead = async () => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/read-all`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.map(notification => ({ ...notification, isRead: true }))
+        )
+      }
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+    }
   }
 
-  const deleteNotification = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.filter(notification => notification.id !== notificationId)
-    )
+  const deleteNotification = async (notificationId: string) => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        setNotifications(prev => 
+          prev.filter(notification => notification.id !== notificationId)
+        )
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+    }
   }
 
   const formatTime = (timestamp: string) => {
@@ -299,7 +274,7 @@ export default function NotificationsPage() {
               ].map(filterOption => (
                 <button
                   key={filterOption.id}
-                  onClick={() => setFilter(filterOption.id as any)}
+                  onClick={() => setFilter(filterOption.id as 'all' | 'unread' | 'connections' | 'projects')}
                   className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                     filter === filterOption.id
                       ? 'bg-blue-600 text-white'

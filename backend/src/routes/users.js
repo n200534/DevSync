@@ -134,6 +134,30 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Get all users (for network page)
+router.get('/', async (req, res) => {
+  try {
+    const { limit = 50, page = 1 } = req.query;
+    
+    const users = await User.find({})
+      .select('_id username name bio avatar githubUrl skills createdAt')
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .lean();
+
+    // Convert MongoDB _id to id for consistency
+    const usersData = users.map(user => ({
+      ...user,
+      id: user._id
+    }));
+
+    res.json(usersData);
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ error: 'Failed to get users' });
+  }
+});
+
 // Get current user (authenticated)
 router.get('/me', authenticateToken, async (req, res) => {
   try {

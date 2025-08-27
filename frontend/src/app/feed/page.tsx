@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navigation from '@/components/Navigation'
 import CreatePostModal from '@/components/CreatePostModal'
+import { User } from '@/types'
 import { 
   Heart, 
   MessageCircle, 
@@ -74,7 +75,7 @@ export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [activeFilter, setActiveFilter] = useState<'all' | 'achievements' | 'projects' | 'learning'>('all')
   const [showCreatePost, setShowCreatePost] = useState(false)
 
@@ -95,139 +96,47 @@ export default function FeedPage() {
         const currentUser = JSON.parse(userData)
         setUser(currentUser)
 
-        // Mock social feed data - replace with actual API calls
-        const mockPosts: Post[] = [
-          {
-            id: '1',
-            type: 'achievement',
-            author: {
-              id: '1',
-              username: 'sarah_dev',
-              name: 'Sarah Johnson',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-              title: 'Senior Full Stack Developer',
-              company: 'TechCorp'
-            },
-            content: 'Just completed my 100th contribution to open source projects! 🎉 The developer community has been incredible in helping me grow. Special thanks to all the maintainers who reviewed my PRs.',
-            achievement: {
-              title: 'Open Source Contributor',
-              description: '100+ contributions to open source projects',
-              icon: '🏆',
-              badge: 'Gold'
-            },
-            stats: {
-              likes: 89,
-              comments: 12,
-              shares: 5,
-              bookmarks: 23
-            },
-            isLiked: false,
-            isBookmarked: false,
-            createdAt: '2024-01-20T10:30:00Z',
-            tags: ['opensource', 'contributions', 'milestone']
-          },
-          {
-            id: '2',
-            type: 'project',
-            author: {
-              id: '2',
-              username: 'alex_coder',
-              name: 'Alex Chen',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-              title: 'DevOps Engineer',
-              company: 'CloudTech'
-            },
-            content: 'Excited to share my latest project - a real-time collaboration platform built with WebRTC and Socket.io! Looking for contributors who are passionate about real-time technologies.',
-            project: {
-              id: '2',
-              title: 'Real-time Collaboration Platform',
-              description: 'A modern platform for real-time code collaboration with video calls and screen sharing',
-              techStack: ['TypeScript', 'WebRTC', 'Socket.io', 'React', 'Express'],
-              githubUrl: 'https://github.com/alex_coder/collab-platform',
-              liveUrl: 'https://collab-platform.demo.com'
-            },
-            stats: {
-              likes: 156,
-              comments: 28,
-              shares: 12,
-              bookmarks: 45
-            },
-            isLiked: true,
-            isBookmarked: false,
-            createdAt: '2024-01-20T09:15:00Z',
-            tags: ['webrtc', 'collaboration', 'typescript', 'opensource']
-          },
-          {
-            id: '3',
-            type: 'learning',
-            author: {
-              id: '3',
-              username: 'maya_ui',
-              name: 'Maya Rodriguez',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              title: 'UI/UX Designer & Frontend Developer',
-              company: 'DesignStudio'
-            },
-            content: 'Just finished a deep dive into React Server Components! The performance improvements are incredible. Here are my key takeaways and a practical example I built.',
-            stats: {
-              likes: 67,
-              comments: 15,
-              shares: 8,
-              bookmarks: 31
-            },
-            isLiked: false,
-            isBookmarked: true,
-            createdAt: '2024-01-19T16:45:00Z',
-            tags: ['react', 'performance', 'learning', 'frontend']
-          },
-          {
-            id: '4',
-            type: 'milestone',
-            author: {
-              id: '4',
-              username: 'blockchain_dev',
-              name: 'James Kim',
-              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-              title: 'Blockchain Developer',
-              company: 'CryptoCorp'
-            },
-            content: 'Milestone achieved! 🚀 Our DeFi protocol just hit $10M TVL (Total Value Locked). Grateful to the amazing team and community that made this possible.',
-            stats: {
-              likes: 234,
-              comments: 45,
-              shares: 23,
-              bookmarks: 67
-            },
-            isLiked: true,
-            isBookmarked: false,
-            createdAt: '2024-01-19T14:20:00Z',
-            tags: ['defi', 'blockchain', 'milestone', 'crypto']
-          },
-          {
-            id: '5',
-            type: 'collaboration',
-            author: {
-              id: '5',
-              username: 'devops_guru',
-              name: 'Lisa Zhang',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-              title: 'Principal DevOps Engineer',
-              company: 'Google Cloud'
-            },
-            content: 'Amazing collaboration session today! Worked with 3 developers from different time zones to debug a complex Kubernetes deployment issue. The power of remote collaboration! 🌍',
-            stats: {
-              likes: 78,
-              comments: 19,
-              shares: 6,
-              bookmarks: 12
-            },
-            isLiked: false,
-            isBookmarked: false,
-            createdAt: '2024-01-18T11:30:00Z',
-            tags: ['collaboration', 'kubernetes', 'devops', 'remote']
+        // Fetch posts from API
+        const postsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
           }
-        ]
+        })
 
+        if (postsResponse.ok) {
+          const postsData = await postsResponse.json()
+          // Transform API data to match our Post interface
+          const transformedPosts: Post[] = postsData.map((post: any) => ({
+            id: post.id,
+            type: post.type,
+            author: {
+              id: post.author.id,
+              username: post.author.username,
+              name: post.author.name,
+              avatar: post.author.avatar || '',
+              title: post.author.title || 'Developer',
+              company: post.author.company || ''
+            },
+            content: post.content,
+            project: post.project,
+            achievement: post.achievement,
+            stats: {
+              likes: post.likes?.length || 0,
+              comments: 0, // Comments not implemented yet
+              shares: 0, // Shares not implemented yet
+              bookmarks: post.bookmarks?.length || 0
+            },
+            isLiked: post.likes?.includes(currentUser.id) || false,
+            isBookmarked: post.bookmarks?.includes(currentUser.id) || false,
+            createdAt: post.createdAt,
+            tags: post.tags || []
+          }))
+          setPosts(transformedPosts)
+        } else {
+          console.error('Failed to fetch posts:', postsResponse.status)
+        }
+
+        // For now, keep trending topics as mock data since we don't have a trending API yet
         const mockTrendingTopics: TrendingTopic[] = [
           { id: '1', title: 'React Server Components', posts: 156, trend: 'up', category: 'framework' },
           { id: '2', title: 'WebRTC', posts: 89, trend: 'up', category: 'technology' },
@@ -235,8 +144,6 @@ export default function FeedPage() {
           { id: '4', title: 'Kubernetes', posts: 67, trend: 'down', category: 'tool' },
           { id: '5', title: 'DeFi', posts: 123, trend: 'up', category: 'technology' }
         ]
-
-        setPosts(mockPosts)
         setTrendingTopics(mockTrendingTopics)
         
       } catch (error) {
@@ -254,64 +161,146 @@ export default function FeedPage() {
     return post.type === activeFilter
   })
 
-  const handleLike = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            isLiked: !post.isLiked,
-            stats: {
-              ...post.stats,
-              likes: post.isLiked ? post.stats.likes - 1 : post.stats.likes + 1
-            }
-          }
-        : post
-    ))
-  }
+  const handleLike = async (postId: string) => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
 
-  const handleBookmark = (postId: string) => {
-    setPosts(prev => prev.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            isBookmarked: !post.isBookmarked,
-            stats: {
-              ...post.stats,
-              bookmarks: post.isBookmarked ? post.stats.bookmarks - 1 : post.stats.bookmarks + 1
-            }
-          }
-        : post
-    ))
-  }
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
 
-  const handleCreatePost = (postData: any) => {
-    const newPost: Post = {
-      id: Date.now().toString(),
-      type: postData.type,
-      author: {
-        id: user.id,
-        username: user.username,
-        name: user.name,
-        avatar: user.avatar || '',
-        title: user.title || 'Developer',
-        company: user.company || ''
-      },
-      content: postData.content,
-      project: postData.project,
-      achievement: postData.achievement,
-      stats: {
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        bookmarks: 0
-      },
-      isLiked: false,
-      isBookmarked: false,
-      createdAt: new Date().toISOString(),
-      tags: postData.tags
+      if (response.ok) {
+        const data = await response.json()
+        setPosts(prev => prev.map(post => 
+          post.id === postId 
+            ? { 
+                ...post, 
+                isLiked: data.isLiked,
+                stats: {
+                  ...post.stats,
+                  likes: data.likesCount
+                }
+              }
+            : post
+        ))
+      }
+    } catch (error) {
+      console.error('Error liking post:', error)
     }
+  }
+
+  const handleBookmark = async (postId: string) => {
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/bookmark`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setPosts(prev => prev.map(post => 
+          post.id === postId 
+            ? { 
+                ...post, 
+                isBookmarked: data.isBookmarked,
+                stats: {
+                  ...post.stats,
+                  bookmarks: data.bookmarksCount
+                }
+              }
+            : post
+        ))
+      }
+    } catch (error) {
+      console.error('Error bookmarking post:', error)
+    }
+  }
+
+  const handleCreatePost = async (postData: {
+    type: 'achievement' | 'project' | 'milestone' | 'learning' | 'collaboration';
+    content: string;
+    tags: string[];
+    project?: {
+      title: string;
+      description: string;
+      techStack: string[];
+      githubUrl?: string;
+      liveUrl?: string;
+    };
+    achievement?: {
+      title: string;
+      description: string;
+      icon: string;
+      badge?: string;
+    };
+  }) => {
+    if (!user) return;
     
-    setPosts(prev => [newPost, ...prev])
+    const token = localStorage.getItem('devsync_token')
+    if (!token) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: postData.type,
+          content: postData.content,
+          tags: postData.tags,
+          project: postData.project,
+          achievement: postData.achievement
+        })
+      })
+
+      if (response.ok) {
+        const newPostData = await response.json()
+        const newPost: Post = {
+          id: newPostData.id,
+          type: newPostData.type,
+          author: {
+            id: newPostData.author.id,
+            username: newPostData.author.username,
+            name: newPostData.author.name,
+            avatar: newPostData.author.avatar || '',
+            title: newPostData.author.title || 'Developer',
+            company: newPostData.author.company || ''
+          },
+          content: newPostData.content,
+          project: newPostData.project,
+          achievement: newPostData.achievement,
+          stats: {
+            likes: 0,
+            comments: 0,
+            shares: 0,
+            bookmarks: 0
+          },
+          isLiked: false,
+          isBookmarked: false,
+          createdAt: newPostData.createdAt,
+          tags: newPostData.tags || []
+        }
+        
+        setPosts(prev => [newPost, ...prev])
+      } else {
+        console.error('Failed to create post:', response.status)
+      }
+    } catch (error) {
+      console.error('Error creating post:', error)
+    }
   }
 
   const getPostIcon = (type: string) => {
@@ -379,7 +368,7 @@ export default function FeedPage() {
                 ].map(filter => (
                   <button
                     key={filter.id}
-                    onClick={() => setActiveFilter(filter.id as any)}
+                    onClick={() => setActiveFilter(filter.id as 'all' | 'achievements' | 'projects' | 'learning')}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                       activeFilter === filter.id
                         ? 'bg-blue-100 text-blue-700'
