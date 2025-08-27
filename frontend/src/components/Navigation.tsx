@@ -76,11 +76,11 @@ export default function Navigation() {
             {/* Main Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               <Link 
-                href="/dashboard" 
+                href="/feed" 
                 className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <Home className="h-4 w-4" />
-                <span>Home</span>
+                <span>Feed</span>
               </Link>
               
               <Link 
